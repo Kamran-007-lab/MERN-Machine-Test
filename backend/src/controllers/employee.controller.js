@@ -1,26 +1,29 @@
 import asyncHandler from "../utils/asyncHandler.js";
 import ApiError from "../utils/ApiError.js";
 import { User } from "../models/user.model.js";
+import { Employee } from "../models/employee.model.js";
 import uploadOnCloudinary from "../utils/cloudinary.js";
 import ApiResponse from "../utils/ApiResponse.js";
 import jwt from "jsonwebtoken";
 import mongoose from "mongoose";
 
-
-const registerEmployee = asyncHandler(async (req, res) => {
-  const { fullname, email, username, password } = req.body;
+const createEmployee = asyncHandler(async (req, res) => {
+  const { fullname, email, phoneNumber, designation, gender, course } =
+    req.body;
   if (
-    [fullname, email, username, password].some((field) => field?.trim() === "")
+    [fullname, email, phoneNumber, designation, gender, course].some(
+      (field) => field?.trim() === ""
+    )
   ) {
     throw new ApiError(400, "All fields are required");
   }
 
-  const existedUser = await User.findOne({
+  const existedEmployee = await Employee.findOne({
     // $or:[]
-    $or: [{ username }, { email }],
+    $or: [{ email }],
   });
 
-  if (existedUser) {
+  if (existedEmployee) {
     throw new ApiError(409, "Someone with this username/email already exists");
   }
   //alp=avatar local path
@@ -36,7 +39,6 @@ const registerEmployee = asyncHandler(async (req, res) => {
     alp = req.files.avatar[0].path;
   }
 
-
   // console.log(req.files)
 
   if (!alp) {
@@ -45,160 +47,109 @@ const registerEmployee = asyncHandler(async (req, res) => {
 
   const avatar = await uploadOnCloudinary(alp);
 
-
   if (!avatar) {
     throw new ApiError(400, "Avatar file is required");
   }
 
-  const user = await User.create({
+  const employee = await Employee.create({
     fullname,
     avatar: avatar.url,
     email,
-    password,
-    username: username.toLowerCase(),
+    designation,
+    gender,
+    course,
   });
 
-  const createdemployee = await Employee.findById(user._id).select(
-    "-password -refreshToken"
-  );
-  if (!createdemployeer) {
-    throw new ApiError(500, "Something went wrong while registering the employee");
+  if (!employee) {
+    throw new ApiError(
+      500,
+      "Something went wrong while registering the employee"
+    );
   }
 
-  // return res.status(201).json({createduser}) This is also correct but not structured
   return res
     .status(201)
-    .json(new ApiResponse(200, createdemployee, "Employee registered successfully"));
+    .json(new ApiResponse(200, employee, "Employee registered successfully"));
 });
 
-const updateAccountDetails =  asyncHandler(async (req, res) => {
-  const { fullname, email } = req.body;
-  if (!fullname || !email) {
-    throw new ApiError(400, "All fields are required");
+const updateAccountDetails = asyncHandler(async (req, res) => {
+  const { fullname, email, phoneNumber, designation, gender, course } =
+    req.body;
+  const { employeeId } = req.params;
+
+  let alp = null;
+  let avatar = null;
+
+  if (
+    req.files &&
+    Array.isArray(req.files.avatar) &&
+    req.files.avatar &&
+    req.files.avatar.length > 0
+  ) {
+    alp = req.files.avatar[0].path;
   }
 
-  const user = findByIdAndUpdate(
-    req.user?._id,
+  // console.log(req.files)
+
+  if (alp) {
+    avatar = await uploadOnCloudinary(alp);
+  }
+  const updateFields = {};
+
+  if (fullname) updateFields.fullname = fullname;
+  if (email) updateFields.email = email;
+  if (phoneNumber) updateFields.phoneNumber = phoneNumber;
+  if (designation) updateFields.designation = designation;
+  if (gender) updateFields.gender = gender;
+  if (course) updateFields.course = course;
+  if (avatar) updateFields.avatar = avatar;
+  if (Object.keys(updateFields).length === 0) {
+    throw new ApiError(400, "Please provide at least one field to update");
+  }
+
+  // Update the employee record with the provided fields
+  const employee = await Employee.findByIdAndUpdate(
+    employeeId,
     {
-      $set: {
-        fullname,
-        email,
-      },
+      $set: updateFields,
     },
     { new: true }
-  ).select("-password");
+  );
+
+  if (!employee) {
+    throw new ApiError(404, "Employee not found");
+  }
 
   return res
     .status(200)
-    .json(new ApiResponse(200, user, "Account details updated successfully"));
+    .json(
+      new ApiResponse(200, employee, "Account details updated successfully")
+    );
 });
 
-const updateUserAvatar = asyncHandler(async (req, res) => {
-  //alp=avatar local path
-  const alp = req.file?.path;
-  if (!alp) {
-    throw new ApiError(400, "Avatar file is missing");
-  }
-  const avatar = await uploadOnCloudinary(alp);
+const getEmployeeProfile = asyncHandler(async (req, res) => {
+  const { employeeId } = req.params;
 
-  if (!avatar.url) {
-    throw new ApiError(400, "Error while uploading Avatar");
+  if (!employeeId?.trim()) {
+    throw new ApiError(400, "Employee id  is missing");
   }
-  const user=await User.findByIdAndUpdate(
-    req.user?._id,
-    {
-      $set: {
-        avatar: avatar.url,
-      },
-    },
-    { new: true }
-  ).select("-password");
-  return res.status(200).json(new ApiResponse(200,user,"Avatar updated successfully"))
+
+  const employee = await Employee.findById(employeeId);
+
+    if (!employee) {
+    throw new ApiError(404, "Employee does not exists");
+  }
+
+  return res
+    .status(200)
+    .json(
+      new ApiResponse(200, employee, "User channel fetched successfully")
+    );
 });
-
-
-
-const getEmployeeProfile = asyncHandler(async(req,res) =>{
-  const {username}=req.params;
-
-  if(!username?.trim()){
-    throw new ApiError(400,"Username is missing")
-  }
-  const channel=await User.aggregate([
-      {
-        $match :{
-          username: username?.toLowerCase()
-        }
-      },
-      {
-        $lookup: {
-          from: "subscriptions",
-          localField:"_id",
-          foreignField:"channel",
-          as:"subscribers"
-        }
-      },
-      {
-        $lookup: {
-          from: "subscriptions",
-          localField:"_id",
-          foreignField:"subscriber",
-          as:"subscribedTo"
-        }
-      },
-      {
-        $addFields: {
-          subscribersCount: {
-            $size: "$subscribers"
-          },
-          channelsSubscribedToCount: {
-            $size: "$subscribedTo"
-          },
-          isSubscribed:{
-            $cond :{
-              if:{$in:[req.user?._id,"$subscribers.subscriber"]},
-              then: true,
-              else: false
-            }
-          }
-        }
-      },
-      {
-        $project: {
-          fullname:1,
-          username:1,
-          subscribersCount:1,
-          channelsSubscribedToCount:1,
-          isSubscribed:1,
-          avatar:1,
-          coverImage:1,
-          email:1
-
-        }
-      }
-
-  ])
-  
-  if(!channel?.length){
-    throw new ApiError(404,"Channel does not exists")
-  }
-
-  return res.status(200).json(
-    new ApiResponse(200,channel[0],"User channel fetched successfully")
-  )
-
-
-
-})
-
-
-
-
 
 export {
-  registerEmployee,
+  createEmployee,
   updateAccountDetails,
-  updateUserAvatar,
   getEmployeeProfile,
 };
 // export loginUser;
