@@ -23,6 +23,7 @@ const generateAccessRefreshToken = async (userId) => {
 };
 
 const registerUser = asyncHandler(async (req, res) => {
+    
   const { fullname, email, username, password } = req.body;
   if (
     [fullname, email, username, password].some((field) => field?.trim() === "")
@@ -30,34 +31,39 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError(400, "All fields are required");
   }
 
-  const existedUser = await User.findOne({
-    // $or:[]
-    $or: [{ username }, { email }],
-  });
-
-  if (existedUser) {
-    throw new ApiError(409, "Someone with this username/email already exists");
-  }
-  
-
-  const user = await User.create({
-    fullname,
-    email,
-    password,
-    username: username.toLowerCase(),
-  });
-
-  const createduser = await User.findById(user._id).select(
-    "-password -refreshToken"
-  );
-  if (!createduser) {
-    throw new ApiError(500, "Something went wrong while registering the user");
+  console.log("Line 34");
+  try {
+    const existedUser = await User.findOne({
+      // $or:[]
+      $or: [{ username }, { email }],
+    });
+    console.log("Line 39");
+    if (existedUser) {
+      throw new ApiError(409, "Someone with this username/email already exists");
+    }
+    
+    console.log("Line 44");
+    const user = await User.create({
+      fullname,
+      email,
+      password,
+      username: username.toLowerCase(),
+    });
+    console.log("Line 51");
+    const createduser = await User.findById(user._id).select(
+      "-password -refreshToken"
+    );
+    if (!createduser) {
+      throw new ApiError(500, "Something went wrong while registering the user");
+    }
+  } catch (error) {
+    throw new ApiError(400, "Error while creating user: " + error.message);
   }
 
   // return res.status(201).json({createduser}) This is also correct but not structured
   return res
     .status(201)
-    .json(new ApiResponse(200, createduser, "User registered successfully"));
+    .json(new ApiResponse(200, {}, "User registered successfully"));
 });
 
 const loginUser = asyncHandler(async (req, res) => {

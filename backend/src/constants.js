@@ -1,1 +1,1 @@
-export const DB_NAME="mern machine test"
+export const DB_NAME="DealsDray"

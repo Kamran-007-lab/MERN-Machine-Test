@@ -139,7 +139,6 @@ const getEmployeeProfile = asyncHandler(async (req, res) => {
     if (!employee) {
     throw new ApiError(404, "Employee does not exists");
   }
-
   return res
     .status(200)
     .json(
