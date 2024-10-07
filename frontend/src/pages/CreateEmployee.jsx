@@ -1,15 +1,13 @@
 import React, { useState } from "react";
 import LoggedNavbar from "../components/LoggedNavbar";
 
-// Simple Spinner Component
 const Spinner = () => (
   <div className="flex justify-center items-center">
-    <div className="w-12 h-12 border-t-4 border-b-4 border-gray-900 rounded-full animate-spin"></div>
+    <div className="w-12 h-12 border-t-4 border-b-4 border-white rounded-full animate-spin"></div>
   </div>
 );
 
 const CreateEmployee = () => {
-  // Form state
   const [formData, setFormData] = useState({
     fullname: "",
     email: "",
@@ -61,7 +59,7 @@ const CreateEmployee = () => {
     data.append("gender", formData.gender);
     data.append("course", formData.course);
     if (formData.avatar) {
-      data.append("avatar", formData.avatar); // Append image if selected
+      data.append("avatar", formData.avatar); 
     }
 
     try {
@@ -69,7 +67,7 @@ const CreateEmployee = () => {
         "http://localhost:8000/api/v1/employees/createEmployee",
         {
           method: "POST",
-          body: data, // FormData
+          body: data, 
           credentials: "include",
         }
       );
