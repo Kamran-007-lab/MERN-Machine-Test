@@ -27,7 +27,7 @@ import employeeRouter from "./routes/employee.routes.js"
 
 //routes declaraton
 app.use("/api/v1/users",userRouter)
-app.use("api/v1/employees",employeeRouter);
+app.use("/api/v1/employees",employeeRouter);
 
 
 

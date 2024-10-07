@@ -1,8 +1,26 @@
-import React, { useState } from "react";
-import Navbar from "../components/Navbar";
+import React, { useState, useEffect } from "react";
+import LoggedNavbar from "../components/LoggedNavbar";
+import { Link } from "react-router-dom";
 
 const EmployeeList = () => {
   // Sample employee data with image URLs
+  useEffect(()=>{
+    const fetchEmployees=async()=>{
+      const response = await fetch("http://localhost:8000/api/v1/employees/getAllEmployees", {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        // body: JSON.stringify(formData),
+        credentials:"include",
+      });
+      const result=await response.json();
+      console.log(result.data); 
+    }
+    fetchEmployees();
+  },[])
+
+
   const [employees, setEmployees] = useState([
     {
       id: 1,
@@ -63,6 +81,11 @@ const EmployeeList = () => {
     );
   };
 
+  // Delete employee
+  const deleteEmployee = (id) => {
+    setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+  };
+
   return (
     <div
       className="min-h-screen bg-cover bg-center"
@@ -70,15 +93,15 @@ const EmployeeList = () => {
         backgroundImage: `url('https://4kwallpapers.com/images/walls/thumbs_3t/8324.png')`,
       }}
     >
-      <Navbar />
+      <LoggedNavbar />
       <div className="flex flex-col items-center justify-center mt-12 text-center gap-y-10">
         <h1 className="text-5xl font-bold text-gray-100">Employee List</h1>
         <div className="bg-gray-100 shadow-md rounded-lg p-6 w-11/12 max-w-6xl">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">Total Count: {employees.length}</h2>
-            <button className="py-2 px-4 bg-green-500 text-white rounded-lg hover:bg-green-600">
+            <Link to="/CreateEmployee"><button className="py-2 px-4 bg-gray-800 text-white rounded-lg hover:bg-gray-600">
               Create Employee
-            </button>
+            </button></Link>
           </div>
           <table className="table-auto w-full bg-white rounded-lg shadow-lg">
             <thead>
@@ -141,6 +164,12 @@ const EmployeeList = () => {
                       onClick={() => toggleActiveStatus(employee.id)}
                     >
                       {employee.isActive ? "Deactivate" : "Activate"}
+                    </button>
+                    <button
+                      className="text-red-500 hover:underline"
+                      onClick={() => deleteEmployee(employee.id)}
+                    >
+                      Delete
                     </button>
                   </td>
                 </tr>

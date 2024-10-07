@@ -10,7 +10,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData,setFormData]=useState({
     password: "",
-    phoneNumber: ""
+    username: ""
   })
 
   // Toggle password visibility
@@ -20,9 +20,6 @@ const Login = () => {
   const handleChange =(e) => {
     const name=e.target.name;
     let value=e.target.value;
-    if(name==="phoneNumber"){
-      value=`+91${value}`
-    }
     setFormData((prevData)=>({
       ...prevData,
       [name]:value
@@ -43,8 +40,8 @@ const Login = () => {
     const result=await response.json();
     if(response.ok){
       // sessionStorage.setItem("phoneNumber", formData.phoneNumber);
-      console.log(response.data);
-      navigate("/HomePage");
+      console.log(result);
+      navigate("/Home");
     }
     else{
       console.error("Failed to get response from backend in login page",result)
@@ -73,18 +70,18 @@ const Login = () => {
 
           {/* Right Side - Login Form */}
           <div className="w-full sm:w-1/2 p-10 flex flex-col justify-center">
-            <h2 className="text-3xl font-semibold mb-2 text-gray-800">FAST₹ Login</h2>
-            <p className="text-sm text-gray-500 mb-8">You are just one step away from your financial independence !!</p>
+            <h2 className="text-3xl font-semibold mb-2 text-gray-800">Login</h2>
+            <p className="text-sm text-gray-500 mb-8">You are just one step away from your recordbook !!</p>
 
             {/* Form */}
             <form className="space-y-6 " onSubmit={handleSubmit}>
               <div>
-                <label htmlFor="phoneNumber" className="block text-sm font-medium text-gray-700">Mobile number or Email</label>
+                <label htmlFor="username" className="block text-sm font-medium text-gray-700">Username</label>
                 <input
-                  type="number"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  placeholder="9115623458"
+                  type="text"
+                  id="username"
+                  name="username"
+                  placeholder="sales@dealsdray.com"
                   onChange={handleChange}
                   className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:ring-green-500 focus:border-green-500"
                 />

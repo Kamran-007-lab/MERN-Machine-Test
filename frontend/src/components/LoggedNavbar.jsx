@@ -18,7 +18,7 @@ const LoggedNavbar = () => {
     const result=await response.json();
     if(response.ok){
       // sessionStorage.setItem("phoneNumber", formData.phoneNumber);
-      console.log(response.data);
+      console.log(result);
       navigate("/");
     }
     else{
@@ -57,6 +57,7 @@ const LoggedNavbar = () => {
           </h1>
           <h1
             className="block py-2 px-4 bg-white text-black rounded-2xl shadow hover:scale-125 duration-200"
+            onClick={handleLogout}
           >
             Logout
           </h1>

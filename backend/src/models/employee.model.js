@@ -9,7 +9,7 @@ const fileTypeValidator = (value) => {
 
 const employeeSchema = new Schema(
   {
-    employeename: {
+    fullname: {
       type: String,
       required: true,
       unique: true,
@@ -23,8 +23,8 @@ const employeeSchema = new Schema(
       lowercase: true,
       trim: true,
       index: true,
-    },
-    mobilenumber: {
+    }, 
+    phoneNumber: {
       type: String,
       required: true,
       trim: true,
@@ -49,6 +49,12 @@ const employeeSchema = new Schema(
     course: {
       type: String,
       enum: ["MCA", "BCA", "BSC"], 
+    },
+    activeStatus: {
+      type: String,
+      enum: ["active", "inactive"], // Restrict values to "active" or "inactive"
+      default: "active", // Set the default value to "active"
+      required: true,
     },
   },
   { timestamps: true }

@@ -8,19 +8,15 @@ const CreateAccount = () => {
   let navigate=useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [formData,setFormData]=useState({
-    fullName: "",
+    fullname: "",
     email: "",
     password: "",
-    aadhar: "",
-    phoneNumber: ""
+    username: "",
   })
 
   const handleChange =(e) => {
     const name=e.target.name;
     let value=e.target.value;
-    if(name==="phoneNumber"){
-      value=`+91${value}`
-    }
     setFormData((prevData)=>({
       ...prevData,
       [name]:value
@@ -39,9 +35,10 @@ const CreateAccount = () => {
     });
     const result=await response.json();
     if(response.ok){
-      sessionStorage.setItem("phoneNumber", formData.phoneNumber);
-      console.log("Going");
-    //   navigate("/VerifyOtp");
+      alert("Account created successfully !! Please log in")
+      // sessionStorage.setItem("phoneNumber", formData.phoneNumber);
+      console.log("Going",result);
+      navigate("/Login");
     }
     else{
       console.error("Failed to get response from backend in create account",result)
@@ -102,9 +99,9 @@ const CreateAccount = () => {
                 </label>
                 <input
                   type="text"
-                  id="fullName"
-                  name="fullName"
-                  placeholder="Full name as per Aadhar card"
+                  id="fullname"
+                  name="fullname"
+                  placeholder="Full name"
                   className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
                   onChange={handleChange}
                 />
@@ -131,29 +128,13 @@ const CreateAccount = () => {
                   htmlFor="businessEmail"
                   className="block text-sm font-medium text-gray-700"
                 >
-                  Phone*
+                  Username*
                 </label>
                 <input
-                  type="number"
-                  id="phoneNumber"
-                  name="phoneNumber"
-                  placeholder="9988776655"
-                  className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
-                  onChange={handleChange}
-                />
-              </div>
-              <div>
-                <label
-                  htmlFor="businessEmail"
-                  className="block text-sm font-medium text-gray-700"
-                >
-                  Aadhar*
-                </label>
-                <input
-                  type="number"
-                  id="aadhar"
-                  name="aadhar"
-                  placeholder="745423889632"
+                  type="username"
+                  id="username"
+                  name="username"
+                  placeholder="sales@dealsdray.in"
                   className="w-full px-4 py-2 mt-1 border border-gray-300 rounded-lg focus:ring-purple-500 focus:border-purple-500"
                   onChange={handleChange}
                 />
