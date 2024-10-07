@@ -126,7 +126,7 @@ const EmployeeList = () => {
       <LoggedNavbar />
       <div className="flex flex-col items-center justify-center mt-12 text-center gap-y-10">
         <h1 className="text-5xl font-bold text-gray-100">Employee List</h1>
-        <div className="bg-gray-100 shadow-md rounded-lg p-6 w-11/12 max-w-6xl">
+        <div className="bg-gray-100 shadow-md rounded-lg p-6 w-11/12 max-w-7xl mb-20">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">
               Total Count: {filteredEmployees?.length}
