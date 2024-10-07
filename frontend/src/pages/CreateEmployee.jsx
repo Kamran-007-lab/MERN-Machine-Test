@@ -1,6 +1,13 @@
 import React, { useState } from "react";
 import LoggedNavbar from "../components/LoggedNavbar";
 
+// Simple Spinner Component
+const Spinner = () => (
+  <div className="flex justify-center items-center">
+    <div className="w-12 h-12 border-t-4 border-b-4 border-gray-900 rounded-full animate-spin"></div>
+  </div>
+);
+
 const CreateEmployee = () => {
   // Form state
   const [formData, setFormData] = useState({
@@ -9,9 +16,11 @@ const CreateEmployee = () => {
     mobile: "",
     designation: "HR",
     gender: "M",
-    course: "", // Only one course can be selected at a time
+    course: "",
     avatar: null,
   });
+
+  const [loading, setLoading] = useState(false); // Loading state
 
   // Input change handler for text fields
   const handleInputChange = (e) => {
@@ -41,6 +50,7 @@ const CreateEmployee = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true); // Start spinner
 
     // Create FormData object
     const data = new FormData();
@@ -53,7 +63,7 @@ const CreateEmployee = () => {
     if (formData.avatar) {
       data.append("avatar", formData.avatar); // Append image if selected
     }
-    console.log(data);
+
     try {
       const response = await fetch(
         "http://localhost:8000/api/v1/employees/createEmployee",
@@ -72,6 +82,8 @@ const CreateEmployee = () => {
       }
     } catch (error) {
       console.error("Error creating employee:", error);
+    } finally {
+      setLoading(false); // Stop spinner
     }
   };
 
@@ -85,172 +97,170 @@ const CreateEmployee = () => {
       <LoggedNavbar />
       <div className="flex flex-col items-center justify-center mt-6 text-center gap-y-10">
         <h1 className="text-5xl font-bold text-gray-100">Create Employee</h1>
-        <form
-          id="form"
-          encType="multipart/form-data"
-          onSubmit={handleSubmit}
-          className="bg-white shadow-md rounded-lg p-6 w-11/12 max-w-4xl"
-        >
-          <div className="grid grid-cols-1 gap-6">
-            {/* Name */}
-            <div>
-              <label className="block text-left text-gray-700 font-bold mb-2">
-                Name
-              </label>
-              <input
-                type="text"
-                name="fullname"
-                value={formData.name}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
 
-            {/* Email */}
-            <div>
-              <label className="block text-left text-gray-700 font-bold mb-2">
-                Email
-              </label>
-              <input
-                type="email"
-                name="email"
-                value={formData.email}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
+        {loading && <Spinner />}
 
-            {/* Mobile No */}
-            <div>
-              <label className="block text-left text-gray-700 font-bold mb-2">
-                Mobile No
-              </label>
-              <input
-                type="text"
-                name="mobile"
-                value={formData.mobile}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                required
-              />
-            </div>
-
-            {/* Designation Dropdown */}
-            <div>
-              <label className="block text-left text-gray-700 font-bold mb-2">
-                Designation
-              </label>
-              <select
-                name="designation"
-                value={formData.designation}
-                onChange={handleInputChange}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="HR">HR</option>
-                <option value="Manager">Manager</option>
-                <option value="Sales">Sales</option>
-              </select>
-            </div>
-
-            {/* Gender Radio Buttons */}
-            <div>
-              <label className="block text-left text-gray-700 font-bold mb-2">
-                Gender
-              </label>
-              <div className="flex gap-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="M"
-                    checked={formData.gender === "M"}
-                    onChange={handleInputChange}
-                    className="form-radio"
-                  />
-                  <span className="ml-2">M</span>
+        {/* Form */}
+        {!loading && (
+          <form
+            id="form"
+            encType="multipart/form-data"
+            onSubmit={handleSubmit}
+            className="bg-white shadow-md rounded-lg p-6 w-11/12 max-w-4xl"
+          >
+            <div className="grid grid-cols-1 gap-6">
+              <div>
+                <label className="block text-left text-gray-700 font-bold mb-2">
+                  Name
                 </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="radio"
-                    name="gender"
-                    value="F"
-                    checked={formData.gender === "F"}
-                    onChange={handleInputChange}
-                    className="form-radio"
-                  />
-                  <span className="ml-2">F</span>
+                <input
+                  type="text"
+                  name="fullname"
+                  value={formData.fullname}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-left text-gray-700 font-bold mb-2">
+                  Email
                 </label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-left text-gray-700 font-bold mb-2">
+                  Mobile No
+                </label>
+                <input
+                  type="text"
+                  name="mobile"
+                  value={formData.mobile}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-left text-gray-700 font-bold mb-2">
+                  Designation
+                </label>
+                <select
+                  name="designation"
+                  value={formData.designation}
+                  onChange={handleInputChange}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="HR">HR</option>
+                  <option value="Manager">Manager</option>
+                  <option value="Sales">Sales</option>
+                </select>
+              </div>
+
+              <div>
+                <label className="block text-left text-gray-700 font-bold mb-2">
+                  Gender
+                </label>
+                <div className="flex gap-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="M"
+                      checked={formData.gender === "M"}
+                      onChange={handleInputChange}
+                      className="form-radio"
+                    />
+                    <span className="ml-2">M</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="radio"
+                      name="gender"
+                      value="F"
+                      checked={formData.gender === "F"}
+                      onChange={handleInputChange}
+                      className="form-radio"
+                    />
+                    <span className="ml-2">F</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-left text-gray-700 font-bold mb-2">
+                  Course
+                </label>
+                <div className="flex gap-4">
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="course"
+                      value="MCA"
+                      checked={formData.course === "MCA"}
+                      onChange={handleCourseChange}
+                      className="form-checkbox"
+                    />
+                    <span className="ml-2">MCA</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="course"
+                      value="BCA"
+                      checked={formData.course === "BCA"}
+                      onChange={handleCourseChange}
+                      className="form-checkbox"
+                    />
+                    <span className="ml-2">BCA</span>
+                  </label>
+                  <label className="inline-flex items-center">
+                    <input
+                      type="checkbox"
+                      name="course"
+                      value="BSC"
+                      checked={formData.course === "BSC"}
+                      onChange={handleCourseChange}
+                      className="form-checkbox"
+                    />
+                    <span className="ml-2">BSC</span>
+                  </label>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-left text-gray-700 font-bold mb-2">
+                  Image Upload
+                </label>
+                <input
+                  type="file"
+                  name="avatar"
+                  onChange={handleImageUpload}
+                  className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+              </div>
+
+              <div className="text-center">
+                <button
+                  type="submit"
+                  className="py-2 px-6 bg-gray-800 text-white rounded-lg hover:bg-gray-600"
+                >
+                  Submit
+                </button>
               </div>
             </div>
-
-            {/* Courses Checkboxes */}
-            <div>
-              <label className="block text-left text-gray-700 font-bold mb-2">
-                Course
-              </label>
-              <div className="flex gap-4">
-                <label className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    name="course"
-                    value="MCA"
-                    checked={formData.course === "MCA"}
-                    onChange={handleCourseChange}
-                    className="form-checkbox"
-                  />
-                  <span className="ml-2">MCA</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    name="course"
-                    value="BCA"
-                    checked={formData.course === "BCA"}
-                    onChange={handleCourseChange}
-                    className="form-checkbox"
-                  />
-                  <span className="ml-2">BCA</span>
-                </label>
-                <label className="inline-flex items-center">
-                  <input
-                    type="checkbox"
-                    name="course"
-                    value="BSC"
-                    checked={formData.course === "BSC"}
-                    onChange={handleCourseChange}
-                    className="form-checkbox"
-                  />
-                  <span className="ml-2">BSC</span>
-                </label>
-              </div>
-            </div>
-
-            {/* Image Upload */}
-            <div>
-              <label className="block text-left text-gray-700 font-bold mb-2">
-                Image Upload
-              </label>
-              <input
-                type="file"
-                name="avatar"
-                onChange={handleImageUpload}
-                className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-
-            {/* Submit Button */}
-            <div className="text-center">
-              <button
-                type="submit"
-                className="py-2 px-6 bg-gray-800 text-white rounded-lg hover:bg-gray-600"
-              >
-                Submit
-              </button>
-            </div>
-          </div>
-        </form>
+          </form>
+        )}
       </div>
     </div>
   );

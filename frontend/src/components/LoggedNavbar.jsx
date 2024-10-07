@@ -1,10 +1,32 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const LoggedNavbar = () => {
   let navigate=useNavigate();
   const [isOpen, setIsOpen] = useState(false);
+  const [admin, setAdmin]=useState("Admin");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+  const getCurrentAdmin = async() => {
+    const response = await fetch("http://localhost:8000/api/v1/users/current-user", {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      // body: JSON.stringify(formData),
+      credentials:"include",
+    });
+    const result=await response.json();
+    if(response.ok){
+      setAdmin(result.data.fullname);
+      console.log(result);
+      
+    }
+    else{
+      console.error("Failed to fetch the admin",result)
+    }
+  }
 
   const handleLogout = async() => {
     const response = await fetch("http://localhost:8000/api/v1/users/logout", {
@@ -17,7 +39,6 @@ const LoggedNavbar = () => {
     });
     const result=await response.json();
     if(response.ok){
-      // sessionStorage.setItem("phoneNumber", formData.phoneNumber);
       console.log(result);
       navigate("/");
     }
@@ -25,35 +46,40 @@ const LoggedNavbar = () => {
       console.error("Failed to logout the user",result)
     }
   }
+  useEffect(()=>{
+    getCurrentAdmin();
+  })
 
   return (
     <nav className="sticky top-0 z-50">
       <div className="container mx-auto py-4 flex justify-between items-center text-white text-xl rounded-3xl">
         
-        {/* Logo */}
         <div className="text-4xl font-semibold text-white">
           <h1>DealsDray</h1>
         </div>
 
-        {/* Links for large screens */}
         <div className="hidden lg:flex lg:space-x-40 lg:items-center">
         <div className='flex'>
+        <Link to="/Home">
           <h1
-            className="block py-2 px-4 text-white hover:scale-125 duration-200"
+            className="block py-2 px-4 text-white hover:scale-125 duration-200 cursor-pointer"
           >
             Home
           </h1>
+          </Link>
+          <Link to="/EmployeeList">
           <h1
-            className="block py-2 px-4 text-white hover:scale-125 duration-200"
+            className="block py-2 px-4 text-white hover:scale-125 duration-200 cursor-pointer"
           >
             Employee List
           </h1>
+          </Link>
           </div>
           <div className='flex'>
           <h1
             className="block py-2 px-4 text-white hover:scale-125 duration-200"
           >
-            Hukum Gupta
+            {admin}
           </h1>
           <h1
             className="block py-2 px-4 bg-white text-black rounded-2xl shadow hover:scale-125 duration-200"
@@ -64,7 +90,6 @@ const LoggedNavbar = () => {
           </div>
         </div>
 
-        {/* User Dropdown */}
         <div className="relative">
           <button
             className="flex items-center focus:outline-none"
@@ -89,7 +114,6 @@ const LoggedNavbar = () => {
           </button>
         </div>
 
-        {/* Hamburger Button (Mobile View) */}
         <div className="lg:hidden">
           <button onClick={() => setIsOpen(!isOpen)} className="focus:outline-none">
             <svg
@@ -123,11 +147,13 @@ const LoggedNavbar = () => {
           <div className="lg:hidden absolute top-full left-0 right-0 bg-white shadow-lg z-10">
             <ul className="flex flex-col items-center space-y-4 py-4">
               <li>
+              <Link to="/Home">
                 <h1
                   className="block py-2 px-4 text-gray-800 hover:text-gray-600"
                 >
                   Home
                 </h1>
+                </Link>
               </li>
               <li>
                 <h1

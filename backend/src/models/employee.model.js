@@ -1,10 +1,11 @@
 import mongoose, { Schema } from "mongoose";
-import jwt from "jsonwebtoken";
-import bcrypt from "bcrypt";
 
-// Validator for file type restriction
 const fileTypeValidator = (value) => {
-  return /\.(jpg|jpeg|png)$/i.test(value); // Check if the file is jpg or png
+  return /\.(jpg|jpeg|png)$/i.test(value); 
+};
+
+const phoneNumberValidator = (value) => {
+  return /^\d{10}$/.test(value); 
 };
 
 const employeeSchema = new Schema(
@@ -15,19 +16,27 @@ const employeeSchema = new Schema(
       unique: true,
       lowercase: true,
       trim: true,
-    }, 
+    },
     email: {
       type: String,
       required: true,
       unique: true,
       lowercase: true,
       trim: true,
+      match: [
+        /^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/,
+        "Please fill a valid email address",
+      ], 
       index: true,
-    }, 
+    },
     phoneNumber: {
       type: String,
       required: true,
       trim: true,
+      validate: {
+        validator: phoneNumberValidator,
+        message: "Phone number must be 10 digits", 
+      },
     },
     avatar: {
       type: String,
@@ -40,20 +49,20 @@ const employeeSchema = new Schema(
     designation: {
       type: String,
       required: true,
-      enum: ["HR", "Manager", "Sales"], 
+      enum: ["HR", "Manager", "Sales"],
     },
     gender: {
       type: String,
-      enum: ["M", "F"], 
+      enum: ["M", "F"],
     },
     course: {
       type: String,
-      enum: ["MCA", "BCA", "BSC"], 
+      enum: ["MCA", "BCA", "BSC"],
     },
     activeStatus: {
       type: String,
-      enum: ["active", "inactive"], // Restrict values to "active" or "inactive"
-      default: "active", // Set the default value to "active"
+      enum: ["active", "inactive"],
+      default: "active",
       required: true,
     },
   },
