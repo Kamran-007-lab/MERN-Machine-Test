@@ -82,7 +82,7 @@ const LoggedNavbar = () => {
             {admin}
           </h1>
           <h1
-            className="block py-2 px-4 bg-white text-black rounded-2xl shadow hover:scale-125 duration-200"
+            className="block py-2 px-4 bg-white text-black rounded-2xl shadow hover:scale-125 duration-200 cursor-pointer"
             onClick={handleLogout}
           >
             Logout
