@@ -5,11 +5,15 @@ import { Link } from "react-router-dom";
 const EmployeeList = () => {
   const [employees, setEmployees] = useState([]);
   const [filteredEmployees, setFilteredEmployees] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(""); // State to store search query
+  const [searchQuery, setSearchQuery] = useState("");
+  const [page, setPage] = useState(1); // Page state
+  const [totalPages, setTotalPages] = useState(1); // Total pages
+  const [sortBy, setSortBy] = useState("createdAt"); // Sorting field
+  const [sortType, setSortType] = useState(1); // Sorting order (1 for ascending, -1 for descending)
 
   const fetchEmployees = async (query = "", page = 1, limit = 4, sortBy = "createdAt", sortType = 1) => {
     const response = await fetch(
-      `http://localhost:8000/api/v1/employees/getAllEmployees/?query=${query}&page=${page}&limit=${limit}&sortBy=${sortBy}&sortType=${sortType} `,
+      `http://localhost:8000/api/v1/employees/getAllEmployees/?query=${query}&page=${page}&limit=${limit}&sortBy=${sortBy}&sortType=${sortType}`,
       {
         method: "GET",
         headers: {
@@ -19,9 +23,11 @@ const EmployeeList = () => {
       }
     );
     const result = await response.json();
+    console.log(result);
     if (result.success) {
-      setEmployees(result.data);
-      setFilteredEmployees(result.data); // Initialize filtered employees
+      setEmployees(result.data); // Assuming result.data contains employees and total pages
+      setFilteredEmployees(result.data);
+      setTotalPages(result.pagination.totalPages); // Assuming totalPages is sent by backend
     } else {
       console.error(
         "Some error occurred while fetching the employee data from backend"
@@ -38,18 +44,19 @@ const EmployeeList = () => {
     return `${day}-${month}-${year}`;
   };
 
-  // Fetch employees on component mount
+  // Fetch employees on component mount or when page, sortBy, or searchQuery changes
   useEffect(() => {
-    fetchEmployees(searchQuery);
-  }, [searchQuery]);
+    fetchEmployees(searchQuery, page, 4, sortBy, sortType); // Limit 4 employees per page
+  }, [searchQuery, page, sortBy, sortType]);
 
   // Handle search query change
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
-    const filtered = employees.filter((employee) =>
-      employee.fullname.toLowerCase().includes(e.target.value.toLowerCase())
-    );
-    setFilteredEmployees(filtered);
+  };
+
+  // Handle sorting option change
+  const handleSortChange = (e) => {
+    setSortBy(e.target.value);
   };
 
   // Toggle active/inactive status
@@ -66,7 +73,7 @@ const EmployeeList = () => {
     );
     const result = await response.json();
     if (result.success) {
-      fetchEmployees();
+      fetchEmployees(); // Refresh employees list
     } else {
       console.error(
         "Some error occurred while toggling the employee status from backend"
@@ -88,11 +95,24 @@ const EmployeeList = () => {
     );
     const result = await response.json();
     if (result.success) {
-      fetchEmployees();
+      fetchEmployees(); // Refresh employees list
     } else {
       console.error(
         "Some error occurred while deleting the employee data from backend"
       );
+    }
+  };
+
+  // Pagination controls
+  const handleNextPage = () => {
+    if (page < totalPages) {
+      setPage(page + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (page > 1) {
+      setPage(page - 1);
     }
   };
 
@@ -109,7 +129,7 @@ const EmployeeList = () => {
         <div className="bg-gray-100 shadow-md rounded-lg p-6 w-11/12 max-w-6xl">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-2xl font-bold text-gray-800">
-              Total Count: {filteredEmployees.length}
+              Total Count: {filteredEmployees?.length}
             </h2>
 
             {/* Search Bar */}
@@ -126,6 +146,20 @@ const EmployeeList = () => {
                 Create Employee
               </button>
             </Link>
+          </div>
+
+          {/* Sorting Options */}
+          <div className="flex justify-start items-center mb-4">
+            <label className="mr-2 text-gray-800">Sort by:</label>
+            <select
+              value={sortBy}
+              onChange={handleSortChange}
+              className="py-2 px-4 border border-gray-400 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="fullname">Name</option>
+              <option value="email">Email</option>
+              <option value="createdAt">Created At</option>
+            </select>
           </div>
 
           {/* Responsive table container */}
@@ -146,7 +180,7 @@ const EmployeeList = () => {
                 </tr>
               </thead>
               <tbody>
-                {filteredEmployees.map((employee) => (
+                {filteredEmployees?.map((employee) => (
                   <tr
                     key={employee?._id}
                     className={`text-gray-700 border-t ${
@@ -204,6 +238,27 @@ const EmployeeList = () => {
                 ))}
               </tbody>
             </table>
+          </div>
+
+          {/* Pagination */}
+          <div className="flex justify-between items-center mt-4">
+            <button
+              className="py-2 px-4 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+              onClick={handlePreviousPage}
+              disabled={page === 1}
+            >
+              Previous
+            </button>
+            <span>
+              Page {page} of {totalPages}
+            </span>
+            <button
+              className="py-2 px-4 bg-gray-300 text-gray-800 rounded-lg hover:bg-gray-400"
+              onClick={handleNextPage}
+              disabled={page === totalPages}
+            >
+              Next
+            </button>
           </div>
         </div>
       </div>
