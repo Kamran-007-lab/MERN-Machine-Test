@@ -3,87 +3,97 @@ import LoggedNavbar from "../components/LoggedNavbar";
 import { Link } from "react-router-dom";
 
 const EmployeeList = () => {
-  // Sample employee data with image URLs
-  useEffect(()=>{
-    const fetchEmployees=async()=>{
-      const response = await fetch("http://localhost:8000/api/v1/employees/getAllEmployees", {
+  const [employees, setEmployees] = useState([]);
+  const [filteredEmployees, setFilteredEmployees] = useState([]);
+  const [searchQuery, setSearchQuery] = useState(""); // State to store search query
+
+  const fetchEmployees = async (query = "", page = 1, limit = 4, sortBy = "createdAt", sortType = 1) => {
+    const response = await fetch(
+      `http://localhost:8000/api/v1/employees/getAllEmployees/?query=${query}&page=${page}&limit=${limit}&sortBy=${sortBy}&sortType=${sortType} `,
+      {
         method: "GET",
         headers: {
           "Content-Type": "application/json",
         },
-        // body: JSON.stringify(formData),
-        credentials:"include",
-      });
-      const result=await response.json();
-      console.log(result.data); 
-    }
-    fetchEmployees();
-  },[])
-
-
-  const [employees, setEmployees] = useState([
-    {
-      id: 1,
-      name: "Hukum",
-      email: "hcgupta@cstech.in",
-      mobile: "954010044",
-      designation: "HR",
-      gender: "Male",
-      course: "MCA",
-      createDate: "13-Feb-21",
-      isActive: true,
-      image: "https://i.pravatar.cc/150?img=1", // Sample avatar image
-    },
-    {
-      id: 2,
-      name: "Manish",
-      email: "manish@cstech.in",
-      mobile: "954010033",
-      designation: "Sales",
-      gender: "Male",
-      course: "BCA",
-      createDate: "12-Feb-21",
-      isActive: true,
-      image: "https://i.pravatar.cc/150?img=2",
-    },
-    {
-      id: 3,
-      name: "Yash",
-      email: "yash@cstech.in",
-      mobile: "954010022",
-      designation: "Manager",
-      gender: "Male",
-      course: "BSC",
-      createDate: "11-Feb-21",
-      isActive: false,
-      image: "https://i.pravatar.cc/150?img=3",
-    },
-    {
-      id: 4,
-      name: "Abhishek",
-      email: "abhishek@cstech.in",
-      mobile: "954010033",
-      designation: "HR",
-      gender: "Male",
-      course: "MCA",
-      createDate: "13-Feb-21",
-      isActive: true,
-      image: "https://i.pravatar.cc/150?img=4",
-    },
-  ]);
-
-  // Toggle active/deactive state
-  const toggleActiveStatus = (id) => {
-    setEmployees((prev) =>
-      prev.map((emp) =>
-        emp.id === id ? { ...emp, isActive: !emp.isActive } : emp
-      )
+        credentials: "include",
+      }
     );
+    const result = await response.json();
+    if (result.success) {
+      setEmployees(result.data);
+      setFilteredEmployees(result.data); // Initialize filtered employees
+    } else {
+      console.error(
+        "Some error occurred while fetching the employee data from backend"
+      );
+    }
+  };
+
+  // Format date as dd-mm-yy
+  const formatDate = (dateString) => {
+    const date = new Date(dateString);
+    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const year = String(date.getFullYear()).slice(-2);
+    return `${day}-${month}-${year}`;
+  };
+
+  // Fetch employees on component mount
+  useEffect(() => {
+    fetchEmployees(searchQuery);
+  }, [searchQuery]);
+
+  // Handle search query change
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+    const filtered = employees.filter((employee) =>
+      employee.fullname.toLowerCase().includes(e.target.value.toLowerCase())
+    );
+    setFilteredEmployees(filtered);
+  };
+
+  // Toggle active/inactive status
+  const toggleActiveStatus = async (employeeId) => {
+    const response = await fetch(
+      `http://localhost:8000/api/v1/employees/toggleEmployee/${employeeId}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+    const result = await response.json();
+    if (result.success) {
+      fetchEmployees();
+    } else {
+      console.error(
+        "Some error occurred while toggling the employee status from backend"
+      );
+    }
   };
 
   // Delete employee
-  const deleteEmployee = (id) => {
-    setEmployees((prev) => prev.filter((emp) => emp.id !== id));
+  const deleteEmployee = async (employeeId) => {
+    const response = await fetch(
+      `http://localhost:8000/api/v1/employees/deleteEmployee/${employeeId}`,
+      {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+    const result = await response.json();
+    if (result.success) {
+      fetchEmployees();
+    } else {
+      console.error(
+        "Some error occurred while deleting the employee data from backend"
+      );
+    }
   };
 
   return (
@@ -98,84 +108,103 @@ const EmployeeList = () => {
         <h1 className="text-5xl font-bold text-gray-100">Employee List</h1>
         <div className="bg-gray-100 shadow-md rounded-lg p-6 w-11/12 max-w-6xl">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-bold text-gray-800">Total Count: {employees.length}</h2>
-            <Link to="/CreateEmployee"><button className="py-2 px-4 bg-gray-800 text-white rounded-lg hover:bg-gray-600">
-              Create Employee
-            </button></Link>
+            <h2 className="text-2xl font-bold text-gray-800">
+              Total Count: {filteredEmployees.length}
+            </h2>
+
+            {/* Search Bar */}
+            <input
+              type="text"
+              placeholder="Search employees..."
+              value={searchQuery}
+              onChange={handleSearchChange}
+              className="py-2 px-4 border border-gray-400 rounded-lg text-gray-800 focus:outline-none focus:ring-2 focus:ring-blue-500 mr-4"
+            />
+
+            <Link to="/CreateEmployee">
+              <button className="py-2 px-4 bg-gray-800 text-white rounded-lg hover:bg-gray-600">
+                Create Employee
+              </button>
+            </Link>
           </div>
-          <table className="table-auto w-full bg-white rounded-lg shadow-lg">
-            <thead>
-              <tr className="bg-gray-200 text-gray-600 text-left">
-                <th className="py-3 px-4">Unique ID</th>
-                <th className="py-3 px-4">Image</th>
-                <th className="py-3 px-4">Name</th>
-                <th className="py-3 px-4">Email</th>
-                <th className="py-3 px-4">Mobile No</th>
-                <th className="py-3 px-4">Designation</th>
-                <th className="py-3 px-4">Gender</th>
-                <th className="py-3 px-4">Course</th>
-                <th className="py-3 px-4">Create Date</th>
-                <th className="py-3 px-4">Action</th>
-              </tr>
-            </thead>
-            <tbody>
-              {employees.map((employee) => (
-                <tr
-                  key={employee.id}
-                  className={`text-gray-700 border-t ${
-                    !employee.isActive ? "bg-gray-100" : ""
-                  }`}
-                >
-                  <td className="py-3 px-4">{employee.id}</td>
-                  <td className="py-3 px-4">
-                    <img
-                      src={employee.image}
-                      alt={`${employee.name}'s avatar`}
-                      className="w-12 h-12 rounded-full"
-                    />
-                  </td>
-                  <td className="py-3 px-4">{employee.name}</td>
-                  <td className="py-3 px-4">
-                    <a
-                      href={`mailto:${employee.email}`}
-                      className="text-blue-500 hover:underline"
-                    >
-                      {employee.email}
-                    </a>
-                  </td>
-                  <td className="py-3 px-4">{employee.mobile}</td>
-                  <td className="py-3 px-4">{employee.designation}</td>
-                  <td className="py-3 px-4">{employee.gender}</td>
-                  <td className="py-3 px-4">{employee.course}</td>
-                  <td className="py-3 px-4">{employee.createDate}</td>
-                  <td className="py-3 px-4 flex gap-4">
-                    <button
-                      className="text-blue-500 hover:underline"
-                      onClick={() => console.log("Edit Employee", employee.id)}
-                    >
-                      Edit
-                    </button>
-                    <button
-                      className={`${
-                        employee.isActive
-                          ? "text-red-500 hover:underline"
-                          : "text-green-500 hover:underline"
-                      }`}
-                      onClick={() => toggleActiveStatus(employee.id)}
-                    >
-                      {employee.isActive ? "Deactivate" : "Activate"}
-                    </button>
-                    <button
-                      className="text-red-500 hover:underline"
-                      onClick={() => deleteEmployee(employee.id)}
-                    >
-                      Delete
-                    </button>
-                  </td>
+
+          {/* Responsive table container */}
+          <div className="overflow-x-auto">
+            <table className="table-auto w-full bg-white rounded-lg shadow-lg">
+              <thead>
+                <tr className="bg-gray-200 text-gray-600 text-left">
+                  <th className="py-3 px-4">Unique ID</th>
+                  <th className="py-3 px-4">Image</th>
+                  <th className="py-3 px-4">Name</th>
+                  <th className="py-3 px-4">Email</th>
+                  <th className="py-3 px-4">Mobile No</th>
+                  <th className="py-3 px-4">Designation</th>
+                  <th className="py-3 px-4">Gender</th>
+                  <th className="py-3 px-4">Course</th>
+                  <th className="py-3 px-4">Create Date</th>
+                  <th className="py-3 px-4">Action</th>
                 </tr>
-              ))}
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {filteredEmployees.map((employee) => (
+                  <tr
+                    key={employee?._id}
+                    className={`text-gray-700 border-t ${
+                      employee.activeStatus === "inactive" ? "bg-gray-100" : ""
+                    }`}
+                  >
+                    <td className="py-3 px-4">{employee._id}</td>
+                    <td className="py-3 px-4">
+                      <img
+                        src={employee?.avatar}
+                        alt={`${employee.fullname}'s avatar`}
+                        className="w-12 h-12 rounded-full"
+                      />
+                    </td>
+                    <td className="py-3 px-4">{employee.fullname}</td>
+                    <td className="py-3 px-4">
+                      <a
+                        href={`mailto:${employee.email}`}
+                        className="text-blue-500 hover:underline"
+                      >
+                        {employee.email}
+                      </a>
+                    </td>
+                    <td className="py-3 px-4">{employee.phoneNumber}</td>
+                    <td className="py-3 px-4">{employee.designation}</td>
+                    <td className="py-3 px-4">{employee.gender}</td>
+                    <td className="py-3 px-4">{employee.course}</td>
+                    <td className="py-3 px-4">{formatDate(employee.createdAt)}</td>
+                    <td className="py-3 px-4 flex gap-4">
+                      <Link to={`/EditEmployee/${employee?._id}`}>
+                        <button className="text-blue-500 hover:underline">
+                          Edit
+                        </button>
+                      </Link>
+                      <button
+                        className={`${
+                          employee.activeStatus === "inactive"
+                            ? "text-red-500 hover:underline"
+                            : "text-green-500 hover:underline"
+                        }`}
+                        onClick={() => toggleActiveStatus(employee._id)}
+                      >
+                        {employee.activeStatus === "inactive"
+                          ? "Inactive"
+                          : "Active"}
+                      </button>
+                      <button
+                        className="text-red-500 hover:underline"
+                        onClick={() => deleteEmployee(employee._id)}
+                      >
+                        Delete
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>

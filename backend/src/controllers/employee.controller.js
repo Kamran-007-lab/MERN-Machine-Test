@@ -24,30 +24,33 @@ const createEmployee = asyncHandler(async (req, res) => {
       // $or:[]
       $or: [{ email }],
     });
-  
+
     if (existedEmployee) {
-      throw new ApiError(409, "Someone with this username/email already exists");
+      throw new ApiError(
+        409,
+        "Someone with this username/email already exists"
+      );
     }
     //alp=avatar local path
     //curl= cover local path url
     let alp = null;
-  
+
     if (req.file && req.file.path.length > 0) {
       alp = req.file.path;
     }
-  
+
     // console.log(req.files)
-  
+
     if (!alp) {
       throw new ApiError(400, "Avatar file is required");
     }
-  
+
     const avatar = await uploadOnCloudinary(alp);
-  
+
     if (!avatar) {
       throw new ApiError(400, "Avatar file is required");
     }
-  
+
     const employee = await Employee.create({
       fullname,
       avatar: avatar.url,
@@ -57,19 +60,19 @@ const createEmployee = asyncHandler(async (req, res) => {
       gender,
       course,
     });
-  
+
     if (!employee) {
       throw new ApiError(
         500,
         "Something went wrong while registering the employee"
       );
     }
-  
+
     return res
       .status(201)
       .json(new ApiResponse(200, employee, "Employee registered successfully"));
   } catch (error) {
-    console.error("Error",error);
+    console.error("Error", error);
   }
 });
 
@@ -81,13 +84,8 @@ const updateAccountDetails = asyncHandler(async (req, res) => {
   let alp = null;
   let avatar = null;
 
-  if (
-    req.files &&
-    Array.isArray(req.files.avatar) &&
-    req.files.avatar &&
-    req.files.avatar.length > 0
-  ) {
-    alp = req.files.avatar[0].path;
+  if (req.file && req.file.path.length > 0) {
+    alp = req.file.path;
   }
 
   // console.log(req.files)
@@ -142,60 +140,6 @@ const getEmployeeProfile = asyncHandler(async (req, res) => {
   }
   return res.status(200).json(new ApiResponse(200, employee, "Employee"));
 });
-// const getAllEmployees = asyncHandler(async (req, res) => {
-//   const {
-//     page = 1,
-//     limit = 5,
-//     query = "",
-//     sortBy = "createdAt",
-//     sortType = 1,
-//   } = req.query;
-//   // console.log(typeof(page),typeof(limit),typeof(sortBy),typeof(sortType))
-//   //TODO: get all videos based on query, sort, pagination
-//   const parsedPage = parseInt(page, 10);
-//   const parsedLimit = parseInt(limit, 10);
-//   const parsedSortType = parseInt(sortType, 10);
-
-//   const employeeAggregate =Employee.aggregate([
-//     {
-//       $match: {
-//         $or: [
-//           { fullname: { $regex: query, $options: "i" } },
-//           // { description: { $regex: query, $options: "i" } },
-//         ],
-//       },
-//     },
-//   ]);
-//   const employees = await employeeAggregate.exec()
-
-//   const options = {
-//     page: parsedPage,
-//     limit: parsedLimit,
-//     customLabels: {
-//       totalDocs: "totalEmployees",
-//       docs: "employees",
-//     },
-//     skip: (page - 1) * limit,
-//     limit: parseInt(limit),
-//   };
-
-//   // const total = await Employee.aggregatePaginate(employeeAggregate, options);
-//   // if (!total) {
-//   //   throw new ApiError(500, "Unexpected issue while employee aggregation");
-//   // }
-//     console.log(employees);
-
-//   // if (total?.employees?.length === 0) {
-//   //   return res.status(200).json(new ApiResponse(200, [], "No videos found"));
-//   // }
-//   if(!employees){
-//     throw new ApiError(404,"Something went worn while fetching the employees");
-//   }
-//   return res
-//     .status(200)
-//     .json(new ApiResponse(200, employees, "video fetched successfully"));
-// });
-
 const getAllEmployees = asyncHandler(async (req, res) => {
   const {
     page = 1, // Default to page 1 if not provided
@@ -261,10 +205,48 @@ const getAllEmployees = asyncHandler(async (req, res) => {
   });
 });
 
+const toggleEmployee = asyncHandler(async (req, res) => {
+  const { employeeId } = req.params;
+
+  if (!employeeId?.trim()) {
+    throw new ApiError(400, "Employee id  is missing");
+  }
+
+  const employee = await Employee.findById(employeeId);
+
+  if (!employee) {
+    throw new ApiError(404, "Employee does not exists");
+  }
+  const newStatus = employee.activeStatus === "active" ? "inactive" : "active";
+
+  employee.activeStatus = newStatus;
+  await employee.save();
+
+  return res.status(200).json(new ApiResponse(200, employee, "Employee"));
+});
+
+const deleteEmployee = asyncHandler(async (req, res) => {
+  const { employeeId } = req.params;
+  // console.log(req.params);
+  if (!employeeId?.trim()) {
+    throw new ApiError(400, "Employee id  is missing");
+  }
+
+  const employee = await Employee.findByIdAndDelete(employeeId);
+  // console.log("241");  
+  if (!employee) {
+    throw new ApiError(404, "Employee does not exists");
+  }
+
+  return res.status(200).json(new ApiResponse(200, employee, "Employee deleted successfully"));
+});
+
 export {
   createEmployee,
   updateAccountDetails,
   getEmployeeProfile,
   getAllEmployees,
+  toggleEmployee,
+  deleteEmployee
 };
 // export loginUser;

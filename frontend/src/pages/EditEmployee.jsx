@@ -1,18 +1,44 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import LoggedNavbar from "../components/LoggedNavbar";
+import { useParams } from "react-router-dom";
 
 const EditEmployee = () => {
-  // Form state
   const [formData, setFormData] = useState({
-    name: "",
+    fullname: "",
     email: "",
-    mobile: "",
+    phoneNumber: "",
     designation: "HR",
-    gender: "Male",
+    gender: "M",
     course: "", // Only one course can be selected at a time
-    image: null,
+    avatar: null,
   });
-
+  const {employeeId}=useParams();
+  const fetchEmployeeById = async () => {
+    const response = await fetch(
+      `http://localhost:8000/api/v1/employees/getEmployeeProfile/${employeeId}`,
+      {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        credentials: "include",
+      }
+    );
+    const result = await response.json();
+    if (result.success) {
+      setFormData(result.data);
+      console.log(result.data);
+    } else {
+      console.error(
+        "Some error occurred while fetching the employee data from backend"
+      );
+    }
+  };
+  useEffect(() => {
+    fetchEmployeeById();
+  }, []);
+  // console.log(useParams());
+  // Form state
   // Input change handler for text fields
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -22,7 +48,7 @@ const EditEmployee = () => {
     }));
   };
 
-  // Handle course selection as checkboxes but limit to one selection
+  // Handle course selection
   const handleCourseChange = (e) => {
     const { value } = e.target;
     setFormData((prev) => ({
@@ -35,14 +61,44 @@ const EditEmployee = () => {
   const handleImageUpload = (e) => {
     setFormData((prev) => ({
       ...prev,
-      image: e.target.files[0],
+      avatar: e.target.files[0], // Store the image file
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    console.log("Form Data Submitted:", formData);
-    // Add form submission logic here (e.g., API call)
+
+    // Create FormData object
+    const data = new FormData();
+    data.append("fullname", formData.fullname);
+    data.append("email", formData.email);
+    data.append("phoneNumber", formData.phoneNumber);
+    data.append("designation", formData.designation);
+    data.append("gender", formData.gender);
+    data.append("course", formData.course);
+    if (formData.avatar) {
+      data.append("avatar", formData.avatar); // Append image if selected
+    }
+    console.log(data);
+    try {
+      const response = await fetch(
+        `http://localhost:8000/api/v1/employees/updateAccountDetails/${employeeId}`,
+        {
+          method: "PATCH",
+          body: data, // FormData
+          credentials: "include",
+        }
+      );
+      const result = await response.json();
+      if (response.ok) {
+        alert("Employee updated successfully!");
+        console.log("Result:", result);
+      } else {
+        console.error("Failed to update employee", result);
+      }
+    } catch (error) {
+      console.error("Error updating employee:", error);
+    }
   };
 
   return (
@@ -56,6 +112,8 @@ const EditEmployee = () => {
       <div className="flex flex-col items-center justify-center mt-6 text-center gap-y-10">
         <h1 className="text-5xl font-bold text-gray-100">Edit Employee</h1>
         <form
+          id="form"
+          encType="multipart/form-data"
           onSubmit={handleSubmit}
           className="bg-white shadow-md rounded-lg p-6 w-11/12 max-w-4xl"
         >
@@ -67,8 +125,8 @@ const EditEmployee = () => {
               </label>
               <input
                 type="text"
-                name="name"
-                value={formData.name}
+                name="fullname"
+                value={formData.fullname}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
@@ -90,15 +148,15 @@ const EditEmployee = () => {
               />
             </div>
 
-            {/* Mobile No */}
+            {/* phoneNumber No */}
             <div>
               <label className="block text-left text-gray-700 font-bold mb-2">
-                Mobile No
+                Mobile Number
               </label>
               <input
                 type="text"
-                name="mobile"
-                value={formData.mobile}
+                name="phoneNumber"
+                value={formData.phoneNumber}
                 onChange={handleInputChange}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
@@ -132,28 +190,28 @@ const EditEmployee = () => {
                   <input
                     type="radio"
                     name="gender"
-                    value="Male"
-                    checked={formData.gender === "Male"}
+                    value="M"
+                    checked={formData.gender === "M"}
                     onChange={handleInputChange}
                     className="form-radio"
                   />
-                  <span className="ml-2">Male</span>
+                  <span className="ml-2">M</span>
                 </label>
                 <label className="inline-flex items-center">
                   <input
                     type="radio"
                     name="gender"
-                    value="Female"
-                    checked={formData.gender === "Female"}
+                    value="F"
+                    checked={formData.gender === "F"}
                     onChange={handleInputChange}
                     className="form-radio"
                   />
-                  <span className="ml-2">Female</span>
+                  <span className="ml-2">F</span>
                 </label>
               </div>
             </div>
 
-            {/* Courses Checkboxes (allow only one selection at a time) */}
+            {/* Courses Checkboxes */}
             <div>
               <label className="block text-left text-gray-700 font-bold mb-2">
                 Course
@@ -202,7 +260,7 @@ const EditEmployee = () => {
               </label>
               <input
                 type="file"
-                name="image"
+                name="avatar"
                 onChange={handleImageUpload}
                 className="w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
